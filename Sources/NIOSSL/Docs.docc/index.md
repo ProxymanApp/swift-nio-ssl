@@ -6,7 +6,9 @@ SwiftNIO SSL is a Swift package that contains an implementation of TLS based on 
 
 The name is inspired primarily by the names of the library this package uses (BoringSSL), and not because we don't know the name of the protocol. We know the protocol is TLS!
 
-## Using SwiftNIO SSL
+## Overview
+
+### Using SwiftNIO SSL
 
 SwiftNIO SSL provides two `ChannelHandler`s to use to secure a data stream: the ``NIOSSLClientHandler`` and the ``NIOSSLServerHandler``. Each of these can be added to a `Channel` to secure the communications on that channel.
 
@@ -51,14 +53,15 @@ let client = ClientBootstrap(group: group)
     }
 ```
 
-The most recent versions of SwiftNIO SSL support Swift 5.5 and newer. The minimum Swift version supported by SwiftNIO SSL releases are detailed below:
+The most recent versions of SwiftNIO SSL support Swift 5.6 and newer. The minimum Swift version supported by SwiftNIO SSL releases are detailed below:
 
 SwiftNIO SSL        | Minimum Swift Version
 --------------------|----------------------
 `2.0.0 ..< 2.14.0`  | 5.0
 `2.14.0 ..< 2.19.0` | 5.2
 `2.19.0 ..< 2.23.0` | 5.4
-`2.23.0 ...`        | 5.5
+`2.23.0 ..< 2.23.2` | 5.5.2
+`2.23.2 ...`        | 5.6
 
 ## Topics
 

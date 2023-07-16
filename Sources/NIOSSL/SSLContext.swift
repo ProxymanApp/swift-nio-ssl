@@ -16,7 +16,7 @@ import NIOCore
 @_implementationOnly import CNIOBoringSSL
 @_implementationOnly import CNIOBoringSSLShims
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if canImport(Darwin)
 import Darwin.C
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
@@ -436,7 +436,7 @@ public final class NIOSSLContext {
         let conn = SSLConnection(ownedSSL: ssl, parentContext: self)
 
         // If we need to turn on the validation on Apple platforms, do it here.
-        #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+        #if canImport(Darwin)
         switch self.configuration.trustRoots {
         case .some(.default), .none:
             conn.setCustomVerificationCallback(CustomVerifyManager(callback: {
@@ -470,10 +470,8 @@ public final class NIOSSLContext {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
 // NIOSSLContext is thread-safe and therefore Sendable
 extension NIOSSLContext: @unchecked Sendable {}
-#endif
 
 
 extension NIOSSLContext {
@@ -547,7 +545,7 @@ extension NIOSSLContext {
         // This copy should be done infrequently, so we don't worry too much about it.
         let protoBuf = protocols.reduce([UInt8](), +)
         let rc = protoBuf.withUnsafeBufferPointer {
-            CNIOBoringSSL_SSL_CTX_set_alpn_protos(context, $0.baseAddress!, CUnsignedInt($0.count))
+            CNIOBoringSSL_SSL_CTX_set_alpn_protos(context, $0.baseAddress!, $0.count)
         }
 
         // Annoyingly this function reverses the error convention: 0 is success, non-zero is failure.
@@ -847,7 +845,7 @@ internal class DirectoryContents: Sequence, IteratorProtocol {
     let path: String
     // Used to account between the differences of DIR being defined on Darwin.
     // Otherwise an OpaquePointer needs to be used to account for the non-defined type in glibc.
-    #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    #if canImport(Darwin)
     let dir: UnsafeMutablePointer<DIR>
     #else
     let dir: OpaquePointer

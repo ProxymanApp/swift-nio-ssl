@@ -15,7 +15,7 @@
 @_implementationOnly import CNIOBoringSSL
 import NIOCore
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if canImport(Darwin)
 import Darwin.C
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
@@ -24,7 +24,7 @@ import Glibc
 #endif
 
 /// The result of an attempt to verify an X.509 certificate.
-public enum NIOSSLVerificationResult: NIOSendable {
+public enum NIOSSLVerificationResult: Sendable {
     /// The certificate was successfully verified.
     case certificateVerified
 
@@ -101,7 +101,6 @@ public typealias NIOSSLCustomVerificationCallback = ([NIOSSLCertificate], EventL
 public typealias _NIOAdditionalPeerCertificateVerificationCallback = (NIOSSLCertificate, Channel) -> EventLoopFuture<Void>
 
 
-#if swift(>=5.6)
 /// A callback that can be used to implement `SSLKEYLOGFILE` support.
 ///
 /// Wireshark can decrypt packet captures that contain encrypted TLS connections if they have access to the
@@ -116,22 +115,6 @@ public typealias _NIOAdditionalPeerCertificateVerificationCallback = (NIOSSLCert
 ///     extract those secrets unnecessarily.
 ///
 public typealias NIOSSLKeyLogCallback = @Sendable (ByteBuffer) -> Void
-#else
-/// A callback that can be used to implement `SSLKEYLOGFILE` support.
-///
-/// Wireshark can decrypt packet captures that contain encrypted TLS connections if they have access to the
-/// session keys used to perform the encryption. These keys are normally stored in a file that has a specific
-/// file format. This callback is the low-level primitive that can be used to write such a file.
-///
-/// When set, this callback will be invoked once per secret. The provided `ByteBuffer` will contain the bytes
-/// that need to be written into the file, including the newline character.
-///
-/// - warning: Please be aware that enabling support for `SSLKEYLOGFILE` through this callback will put the secrecy of
-///     your connections at risk. You should only do so when you are confident that it will not be possible to
-///     extract those secrets unnecessarily.
-///
-public typealias NIOSSLKeyLogCallback = (ByteBuffer) -> Void
-#endif
 
 
 /// An object that provides helpers for working with a NIOSSLKeyLogCallback
@@ -159,7 +142,7 @@ extension KeyLogCallbackManager {
 }
 
 /// PSK Server Identity response type used in the callback.
-public struct PSKServerIdentityResponse: NIOSendable {
+public struct PSKServerIdentityResponse: Sendable {
     /// The negotiated PSK.
     public var key: NIOSSLSecureBytes
 
@@ -171,7 +154,7 @@ public struct PSKServerIdentityResponse: NIOSendable {
     }
 }
 /// PSK Client Identity response type used in the callback.
-public struct PSKClientIdentityResponse: NIOSendable {
+public struct PSKClientIdentityResponse: Sendable {
     /// The negotiated PSK.
     public var key: NIOSSLSecureBytes
 

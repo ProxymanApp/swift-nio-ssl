@@ -16,7 +16,7 @@ import NIOCore
 @_implementationOnly import CNIOBoringSSL
 @_implementationOnly import CNIOBoringSSLShims
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if canImport(Darwin)
 import Darwin.C
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
@@ -69,10 +69,8 @@ public struct _SubjectAlternativeNames {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
 // _SubjectAlternativeNames is immutable and therefore Sendable
 extension _SubjectAlternativeNames: @unchecked Sendable {}
-#endif
 
 extension _SubjectAlternativeNames: RandomAccessCollection {
     
@@ -87,7 +85,7 @@ extension _SubjectAlternativeNames: RandomAccessCollection {
 
 public struct _SubjectAlternativeName {
     
-    public struct NameType: Hashable, NIOSendable {
+    public struct NameType: Hashable, Sendable {
         public var rawValue: Int
 
         public init(_ rawCode: Int) {
@@ -132,13 +130,11 @@ public struct _SubjectAlternativeName {
     public var contents: Contents
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
 // _SubjectAlternativeName is immutable and therefore Sendable
 extension _SubjectAlternativeName: @unchecked Sendable {}
 
 // _SubjectAlternativeName.Contents is immutable and therefore Sendable
 extension _SubjectAlternativeName.Contents: @unchecked Sendable {}
-#endif
 
 extension _SubjectAlternativeName.Contents: RandomAccessCollection {
     

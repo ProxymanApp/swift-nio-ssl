@@ -14,7 +14,7 @@
 
 import NIOCore
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if canImport(Darwin)
 import Darwin.C
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
@@ -149,7 +149,5 @@ public final class NIOSSLClientHandler: NIOSSLHandler {
     }
 }
 
-#if swift(>=5.6)
 @available(*, unavailable)
 extension NIOSSLClientHandler: Sendable {}
-#endif

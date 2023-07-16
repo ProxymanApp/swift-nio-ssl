@@ -228,6 +228,14 @@ const EVP_HPKE_KEM *EVP_hpke_x25519_hkdf_sha256(void) {
 
 uint16_t EVP_HPKE_KEM_id(const EVP_HPKE_KEM *kem) { return kem->id; }
 
+size_t EVP_HPKE_KEM_public_key_len(const EVP_HPKE_KEM *kem) {
+  return kem->public_key_len;
+}
+
+size_t EVP_HPKE_KEM_private_key_len(const EVP_HPKE_KEM *kem) {
+  return kem->private_key_len;
+}
+
 size_t EVP_HPKE_KEM_enc_len(const EVP_HPKE_KEM *kem) { return kem->enc_len; }
 
 void EVP_HPKE_KEY_zero(EVP_HPKE_KEY *key) {
@@ -242,7 +250,6 @@ void EVP_HPKE_KEY_cleanup(EVP_HPKE_KEY *key) {
 EVP_HPKE_KEY *EVP_HPKE_KEY_new(void) {
   EVP_HPKE_KEY *key = OPENSSL_malloc(sizeof(EVP_HPKE_KEY));
   if (key == NULL) {
-    OPENSSL_PUT_ERROR(EVP, ERR_R_MALLOC_FAILURE);
     return NULL;
   }
   EVP_HPKE_KEY_zero(key);
@@ -358,13 +365,11 @@ const EVP_AEAD *EVP_HPKE_AEAD_aead(const EVP_HPKE_AEAD *aead) {
 static int hpke_build_suite_id(const EVP_HPKE_CTX *ctx,
                                uint8_t out[HPKE_SUITE_ID_LEN]) {
   CBB cbb;
-  int ret = CBB_init_fixed(&cbb, out, HPKE_SUITE_ID_LEN) &&
-            add_label_string(&cbb, "HPKE") &&   //
-            CBB_add_u16(&cbb, ctx->kem->id) &&  //
-            CBB_add_u16(&cbb, ctx->kdf->id) &&  //
-            CBB_add_u16(&cbb, ctx->aead->id);
-  CBB_cleanup(&cbb);
-  return ret;
+  CBB_init_fixed(&cbb, out, HPKE_SUITE_ID_LEN);
+  return add_label_string(&cbb, "HPKE") &&   //
+         CBB_add_u16(&cbb, ctx->kem->id) &&  //
+         CBB_add_u16(&cbb, ctx->kdf->id) &&  //
+         CBB_add_u16(&cbb, ctx->aead->id);
 }
 
 #define HPKE_MODE_BASE 0
@@ -401,8 +406,8 @@ static int hpke_key_schedule(EVP_HPKE_CTX *ctx, const uint8_t *shared_secret,
   uint8_t context[sizeof(uint8_t) + 2 * EVP_MAX_MD_SIZE];
   size_t context_len;
   CBB context_cbb;
-  if (!CBB_init_fixed(&context_cbb, context, sizeof(context)) ||
-      !CBB_add_u8(&context_cbb, HPKE_MODE_BASE) ||
+  CBB_init_fixed(&context_cbb, context, sizeof(context));
+  if (!CBB_add_u8(&context_cbb, HPKE_MODE_BASE) ||
       !CBB_add_bytes(&context_cbb, psk_id_hash, psk_id_hash_len) ||
       !CBB_add_bytes(&context_cbb, info_hash, info_hash_len) ||
       !CBB_finish(&context_cbb, NULL, &context_len)) {
@@ -459,7 +464,6 @@ void EVP_HPKE_CTX_cleanup(EVP_HPKE_CTX *ctx) {
 EVP_HPKE_CTX *EVP_HPKE_CTX_new(void) {
   EVP_HPKE_CTX *ctx = OPENSSL_malloc(sizeof(EVP_HPKE_CTX));
   if (ctx == NULL) {
-    OPENSSL_PUT_ERROR(EVP, ERR_R_MALLOC_FAILURE);
     return NULL;
   }
   EVP_HPKE_CTX_zero(ctx);

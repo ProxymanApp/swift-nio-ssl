@@ -21,14 +21,10 @@
 /// ``NIOSSLCertificate`` objects to be serialized, so that they can be passed to
 /// general-purpose cryptography libraries.
 public final class NIOSSLPublicKey {
-    private let _ref: UnsafeMutableRawPointer /*<EVP_PKEY>*/
+    private let ref: OpaquePointer /*<EVP_PKEY>*/
 
-    private var ref: UnsafeMutablePointer<EVP_PKEY> {
-        return self._ref.assumingMemoryBound(to: EVP_PKEY.self)
-    }
-
-    fileprivate init(withOwnedReference ref: UnsafeMutablePointer<EVP_PKEY>) {
-        self._ref = UnsafeMutableRawPointer(ref) // erasing the type for @_implementationOnly import CNIOBoringSSL
+    fileprivate init(withOwnedReference ref: OpaquePointer) {
+        self.ref = ref
     }
 
     deinit {
@@ -36,11 +32,9 @@ public final class NIOSSLPublicKey {
     }
 }
 
-#if swift(>=5.6)
 // NIOSSLPublicKey is publicly immutable and we do not internally mutate it after initialisation.
 // It is therefore Sendable.
 extension NIOSSLPublicKey: @unchecked Sendable {}
-#endif
 
 // MARK:- Helpful initializers
 extension NIOSSLPublicKey {
@@ -51,7 +45,7 @@ extension NIOSSLPublicKey {
     /// - parameters:
     ///    - pointer: A pointer to an `EVP_PKEY` structure containing the public key.
     /// - returns: An `NIOSSLPublicKey` wrapping the pointer.
-    internal static func fromInternalPointer(takingOwnership pointer: UnsafeMutablePointer<EVP_PKEY>) -> NIOSSLPublicKey {
+    internal static func fromInternalPointer(takingOwnership pointer: OpaquePointer) -> NIOSSLPublicKey {
         return NIOSSLPublicKey(withOwnedReference: pointer)
     }
 }

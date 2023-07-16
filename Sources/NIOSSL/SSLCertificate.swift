@@ -16,7 +16,7 @@ import CNIOBoringSSL
 import CNIOBoringSSLShims
 import NIOCore
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if canImport(Darwin)
 import Darwin.C
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
@@ -24,7 +24,7 @@ import Glibc
 #error("unsupported os")
 #endif
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if canImport(Darwin)
 import struct Darwin.time_t
 #elseif canImport(Glibc)
 import struct Glibc.time_t
@@ -108,7 +108,7 @@ public final class NIOSSLCertificate {
     ///     - format: The format to use to parse the file.
     public convenience init(bytes: [UInt8], format: NIOSSLSerializationFormats) throws {
         let ref = bytes.withUnsafeBytes { (ptr) -> OpaquePointer? in
-            let bio = CNIOBoringSSL_BIO_new_mem_buf(ptr.baseAddress, CInt(ptr.count))!
+            let bio = CNIOBoringSSL_BIO_new_mem_buf(ptr.baseAddress, ptr.count)!
 
             defer {
                 CNIOBoringSSL_BIO_free(bio)
@@ -136,7 +136,7 @@ public final class NIOSSLCertificate {
         // ContiguousBytes would have been the lowest effort way to reduce this duplication, but we can't use it without
         // bringing Foundation in. Probably we should use Sequence where Element == UInt8 and the withUnsafeContiguousBytesIfAvailable
         // method, but that's a much more substantial refactor. Let's do it later.
-        let bio = CNIOBoringSSL_BIO_new_mem_buf(ptr.baseAddress, CInt(ptr.count))!
+        let bio = CNIOBoringSSL_BIO_new_mem_buf(ptr.baseAddress, ptr.count)!
 
         defer {
             CNIOBoringSSL_BIO_free(bio)
@@ -234,11 +234,9 @@ public final class NIOSSLCertificate {
     }
 }
 
-#if swift(>=5.5) && canImport(_Concurrency)
 // NIOSSLCertificate is publicly immutable and we do not internally mutate it after initialisation.
 // It is therefore Sendable.
 extension NIOSSLCertificate: @unchecked Sendable {}
-#endif
 
 // MARK:- Utility Functions
 // We don't really want to get too far down the road of providing helpers for things like certificates
@@ -287,7 +285,7 @@ extension NIOSSLCertificate {
         }
 
         return try bytes.withUnsafeBytes { (ptr) -> [NIOSSLCertificate] in
-            let bio = CNIOBoringSSL_BIO_new_mem_buf(ptr.baseAddress, CInt(ptr.count))!
+            let bio = CNIOBoringSSL_BIO_new_mem_buf(ptr.baseAddress, ptr.count)!
             defer {
                 CNIOBoringSSL_BIO_free(bio)
             }

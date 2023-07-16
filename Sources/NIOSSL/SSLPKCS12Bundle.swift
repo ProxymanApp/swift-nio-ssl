@@ -45,8 +45,8 @@ public struct NIOSSLPKCS12Bundle: Hashable {
     /// The ``NIOSSLPrivateKey`` object for the leaf certificate in the PKCS#12 bundle.
     public let privateKey: NIOSSLPrivateKey
 
-    public init<Bytes: Collection>(ref: OpaquePointer, passphrase: Bytes?) throws where Bytes.Element == UInt8 {
-        var pkey: UnsafeMutablePointer<EVP_PKEY>? = nil
+    private init<Bytes: Collection>(ref: OpaquePointer, passphrase: Bytes?) throws where Bytes.Element == UInt8 {
+        var pkey: OpaquePointer?/*<EVP_PKEY>*/ = nil
         var cert: OpaquePointer?/*<X509>*/ = nil
         var caCerts: OpaquePointer? = nil
 
@@ -90,7 +90,7 @@ public struct NIOSSLPKCS12Bundle: Hashable {
         guard boringSSLIsInitialized else { throw NIOSSLError.failCertificate("Failed to initialize BoringSSL") }
         
         let p12 = buffer.withUnsafeBytes { pointer -> OpaquePointer? in
-            let bio = CNIOBoringSSL_BIO_new_mem_buf(pointer.baseAddress, CInt(pointer.count))!
+            let bio = CNIOBoringSSL_BIO_new_mem_buf(pointer.baseAddress, pointer.count)!
             defer {
                 CNIOBoringSSL_BIO_free(bio)
             }
@@ -156,9 +156,7 @@ public struct NIOSSLPKCS12Bundle: Hashable {
     }
 }
 
-#if swift(>=5.6)
 extension NIOSSLPKCS12Bundle: Sendable {}
-#endif
 
 extension Collection where Element == UInt8 {
     /// Provides a contiguous copy of the bytes of this collection in a heap-allocated
