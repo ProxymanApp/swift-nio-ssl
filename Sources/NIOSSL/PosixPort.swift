@@ -22,6 +22,8 @@
 // can lift anything missing from there and move it over without change.
 #if canImport(Darwin)
 import Darwin.C
+#elseif canImport(Musl)
+import Musl
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
 #else
@@ -36,23 +38,13 @@ internal typealias FILEPointer = OpaquePointer
 internal typealias FILEPointer = UnsafeMutablePointer<FILE>
 #endif
 
-private let sysFopen: @convention(c) (UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> FILEPointer? = fopen
-private let sysMlock: @convention(c) (UnsafeRawPointer?, size_t) -> CInt = mlock
-private let sysMunlock: @convention(c) (UnsafeRawPointer?, size_t) -> CInt = munlock
-private let sysFclose: @convention(c) (FILEPointer?) -> CInt = fclose
-
-// Sadly, stat, lstat, and readlink have different signatures with glibc and macOS libc.
-#if canImport(Darwin) || os(Android)
-private let sysStat: @convention(c) (UnsafePointer<CChar>?, UnsafeMutablePointer<stat>?) -> CInt = stat(_:_:)
-private let sysReadlink: @convention(c) (UnsafePointer<Int8>?, UnsafeMutablePointer<Int8>?, Int) -> Int = readlink
-private let sysLstat:  @convention(c) (UnsafePointer<Int8>?, UnsafeMutablePointer<stat>?) -> Int32 = lstat
-
-#elseif os(Linux) || os(FreeBSD)
-private let sysStat: @convention(c) (UnsafePointer<CChar>, UnsafeMutablePointer<stat>) -> CInt = stat(_:_:)
-private let sysReadlink: @convention(c) (UnsafePointer<Int8>, UnsafeMutablePointer<Int8>, Int) -> Int = readlink
-private let sysLstat:  @convention(c) (UnsafePointer<Int8>, UnsafeMutablePointer<stat>) -> Int32 = lstat
-#endif
-
+private let sysFopen = fopen
+private let sysMlock = mlock
+private let sysMunlock = munlock
+private let sysFclose = fclose
+private let sysStat = stat
+private let sysLstat = lstat
+private let sysReadlink = readlink
 
 // MARK:- Copied code from SwiftNIO
 private func isUnacceptableErrno(_ code: CInt) -> Bool {

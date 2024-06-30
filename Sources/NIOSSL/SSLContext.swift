@@ -18,6 +18,8 @@ import NIOCore
 
 #if canImport(Darwin)
 import Darwin.C
+#elseif canImport(Musl)
+import Musl
 #elseif os(Linux) || os(FreeBSD) || os(Android)
 import Glibc
 #else
@@ -528,8 +530,7 @@ extension NIOSSLContext {
         case .some("der"), .some("key"):
             fileType = SSL_FILETYPE_ASN1
         default:
-            // TODO(cory): Again, error handling here would be good.
-            fatalError("Unknown private key file type.")
+            throw NIOSSLExtraError.unknownPrivateKeyFileType(path: path)
         }
         
         let result = path.withCString { (pointer) -> CInt in
@@ -667,6 +668,15 @@ extension NIOSSLContext {
             rootCADirectoryPath.withCString { rootCADirectoryPointer in
                 CNIOBoringSSL_SSL_CTX_load_verify_locations(context, rootCAFilePointer, rootCADirectoryPointer)
             }
+        }
+
+        if result == 0 {
+            let errorStack = BoringSSLError.buildErrorStack()
+            throw BoringSSLError.unknownError(errorStack)
+        }
+        #elseif os(Android)
+        let result = rootCADirectoryPath.withCString { rootCADirectoryPointer in
+            CNIOBoringSSL_SSL_CTX_load_verify_locations(context, nil, rootCADirectoryPointer)
         }
 
         if result == 0 {
@@ -853,7 +863,7 @@ internal class DirectoryContents: Sequence, IteratorProtocol {
     
     init(path: String) {
         self.path = path
-        self.dir = opendir(path)
+        self.dir = opendir(path)!
     }
     
     func next() -> String? {
