@@ -126,7 +126,7 @@ public final class NIOSSLPrivateKey {
 
     public let representation: Representation
 
-    internal func withUnsafeMutableEVPPKEYPointer<ReturnType>(_ body: (OpaquePointer) throws -> ReturnType) rethrows -> ReturnType {
+    public func withUnsafeMutableEVPPKEYPointer<ReturnType>(_ body: (OpaquePointer) throws -> ReturnType) rethrows -> ReturnType {
         guard case .native(let pointer) = self.representation else {
             preconditionFailure()
         }
@@ -304,7 +304,7 @@ public final class NIOSSLPrivateKey {
     ///
     /// In general, however, this function should be avoided in favour of one of the convenience
     /// initializers, which ensure that the lifetime of the EVP_PKEY object is better-managed.
-    static internal func fromUnsafePointer(takingOwnership pointer: OpaquePointer) -> NIOSSLPrivateKey {
+    public static func fromUnsafePointer(takingOwnership pointer: OpaquePointer) -> NIOSSLPrivateKey {
         return NIOSSLPrivateKey(withReference: pointer)
     }
 
