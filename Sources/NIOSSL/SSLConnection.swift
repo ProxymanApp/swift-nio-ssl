@@ -436,6 +436,15 @@ internal final class SSLConnection {
         self.bio?.evacuateInboundData()
     }
 
+    /// Returns the negotiated cipher suite for the current connection.
+    func getNegotiatedCipherSuite() -> NIOTLSCipher? {
+        guard let cipher = CNIOBoringSSL_SSL_get_current_cipher(self.ssl) else {
+            return nil
+        }
+        let cipherID = CNIOBoringSSL_SSL_CIPHER_get_protocol_id(cipher)
+        return NIOTLSCipher(rawValue: cipherID)
+    }
+
     /// Returns  an optional `TLSVersion` used on a `Channel` through the `NIOSSLHandler` APIs.
     func getTLSVersionForConnection() -> TLSVersion? {
         let uint16Version = CNIOBoringSSL_SSL_version(self.ssl)

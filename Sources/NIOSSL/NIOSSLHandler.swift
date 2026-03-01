@@ -64,6 +64,9 @@ public class NIOSSLHandler: ChannelInboundHandler, ChannelOutboundHandler, Remov
     private let maxWriteSize: Int
     private var configuration: Configuration
 
+    /// Proxyman: callback invoked when TLS handshake completes.
+    public var connectionOnComplete: ((TLSVersion?, String?, NIOTLSCipher?) -> Void)?
+
     internal var channel: Channel? {
         self.storedContext?.channel
     }
@@ -421,6 +424,11 @@ public class NIOSSLHandler: ChannelInboundHandler, ChannelOutboundHandler, Remov
         // TODO(cory): This event should probably fire out of the BoringSSL info callback.
         let negotiatedProtocol = connection.getAlpnProtocol()
         context.fireUserInboundEventTriggered(TLSUserEvent.handshakeCompleted(negotiatedProtocol: negotiatedProtocol))
+
+        // Proxyman: notify handshake completion with TLS info
+        let tlsVersion = connection.getTLSVersionForConnection()
+        let negotiatedCipher = connection.getNegotiatedCipherSuite()
+        connectionOnComplete?(tlsVersion, negotiatedProtocol, negotiatedCipher)
 
         // We need to unbuffer any pending writes and reads. We will have pending writes if the user attempted to
         // write before we completed the handshake. We may also have pending reads if the user sent data immediately
