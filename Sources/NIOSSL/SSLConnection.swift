@@ -94,6 +94,18 @@ internal final class SSLConnection {
         self.role = .client
     }
 
+    func setMessageCallbackEnabled(_ enabled: Bool) {
+        // Reuse SSL's existing unowned connection pointer; the callback must not extend socket lifetime.
+        CNIOBoringSSL_SSL_set_msg_callback(self.ssl, enabled ? { outgoing, version, contentType, bytes, count, ssl, _ in
+            guard let ssl = ssl, let bytes = bytes,
+                  let pointer = CNIOBoringSSL_SSL_get_ex_data(ssl, sslConnectionExDataIndex) else { return }
+            let connection = Unmanaged<SSLConnection>.fromOpaque(pointer).takeUnretainedValue()
+            guard let message = NIOSSLConnectionMessage(outgoing: outgoing != 0, version: Int(version),
+                                                        contentType: Int(contentType), bytes: bytes, count: count) else { return }
+            connection.parentHandler?.connectionMessageCallback?(message)
+        } : nil)
+    }
+
     func setAllocator(_ allocator: ByteBufferAllocator, maximumPreservedOutboundBufferCapacity: Int) {
         self.bio = ByteBufferBIO(
             allocator: allocator,
