@@ -67,6 +67,11 @@ public class NIOSSLHandler: ChannelInboundHandler, ChannelOutboundHandler, Remov
     /// Proxyman: callback invoked when TLS handshake completes.
     public var connectionOnComplete: ((TLSVersion?, String?, NIOTLSCipher?) -> Void)?
 
+    /// Proxyman: bounded metadata only. Called on the channel event loop; never re-enter SSL from this callback.
+    public var connectionMessageCallback: ((NIOSSLConnectionMessage) -> Void)? {
+        didSet { connection.setMessageCallbackEnabled(connectionMessageCallback != nil) }
+    }
+
     internal var channel: Channel? {
         self.storedContext?.channel
     }
